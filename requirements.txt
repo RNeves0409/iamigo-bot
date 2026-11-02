@@ -1,0 +1,2 @@
+# Dependências do projeto iAmigo
+# (vazio: o bot utiliza apenas módulos padrão do Python)

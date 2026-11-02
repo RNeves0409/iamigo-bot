@@ -1,0 +1,19 @@
+# Ambiente virtual
+venv/
+.venv/
+
+# Arquivos de compilação
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Segredos e configuração local
+.env
+.env.local
+
+# Logs
+logs/
+
+# Sistema
+journalctl-output.txt
