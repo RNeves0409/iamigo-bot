@@ -25,8 +25,19 @@ jobs:
           . .venv/bin/activate
           pip install --upgrade pip
 
-      - name: Executar testes
+      - name: Cobertura + pytest
+        run: |
+          . .venv/bin/activate
+          pip install pytest coverage
+          coverage run -m pytest tests/ -v --tb=short
+          coverage report --show-missing --fail-under=100
+
+      - name: Compatibilidade com unittest
         run: |
           . .venv/bin/activate
           python -m unittest test_db -v
           python -m unittest tests.test_service -v
+          python -m unittest tests.test_ai -v
+          python -m unittest tests.test_handler -v
+          python -m unittest tests.test_handler_audio -v
+          python -m unittest tests.test_ai_contract -v

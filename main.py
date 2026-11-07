@@ -5,7 +5,7 @@ import logging
 import time
 
 from db import connect, get_config_value, set_config_value
-from api import api
+from api import ApiError, api
 from services import notifications, handle
 
 # Garante que o banco de dados exista (esquema criado na primeira conexão)
@@ -27,11 +27,11 @@ while True:
         for update in updates:
             try:
                 handle(update.get("message", {}))
-            except api.ApiError as error:
+            except ApiError as error:
                 logging.warning("Falha na resposta; codigo=%s", error.code)
             offset = update["update_id"] + 1
             set_config_value("offset", str(offset))
-    except api.ApiError as error:
+    except ApiError as error:
         logging.warning("Falha na API; codigo=%s", error.code)
         time.sleep(max(5, error.retry_after))
     except Exception as error:

@@ -158,9 +158,39 @@ O bot deve estar respondendo nas conversas privadas do Telegram.
 
 ## 🔄 Manutenção
 
+### 11. Opcional — Deploy com Docker Compose (método preferido — Fase 1)
+
+```bash
+# Pré-requisito: Docker + Docker Compose instalados
+docker pull ollama/ollama:latest
+docker compose pull
+docker compose up -d
+
+docker compose ps          # verificar estado
+docker compose logs -f bot # verificar logs
+```
+
+O stack fica composto por:
+- `bot`  → `main.py`, com o banco SQLite em volume (`iamigo-data`), no caminho
+  `/var/lib/iamigo/agenda.db` (padrão do projeto);
+- `ollama` → Ollama, acesso interno em `http://ollama:11434`
+  (`.env` define `OLLAMA_BASE_URL=http://ollama:11434`).
+
+Os serviços `bot` e `ollama` estão na rede `iamigo-net`; nenhum dos dois expõe
+portas para a máquina host (o CLI do Ollama só precisaria acesso via
+`--add-host=host.docker.internal:host-gateway`).
+
+> Quando o usuário tiver o Zabbix instalado e configurado no host, é possível
+> adicionar o serviço `zabbix-agent` ao `docker-compose.yml` (fuso horário
+> `America/Sao_Paulo`, logs via `json-file`).
+
 ### Atualizar
 
 ```bash
+# Versão Docker
+docker compose pull
+docker compose up -d
+# versão systemd (referência)
 sudo -u iamigo git pull origin main
 sudo -u iamigo venv/bin/pip install -r requirements.txt
 sudo systemctl restart iamigo
@@ -216,3 +246,38 @@ gunzip -c /var/backups/iamigo/agenda_*.sql.gz | sqlite3 /var/lib/iamigo/agenda.d
 ## 📞 Suporte
 
 Reporte problemas ou sugira melhorias no repositório do projeto.
+
+### 📤 Pipeline de integração contínua (Fase 4)
+O repositório possui `.github/workflows/test.yml` com 3 jobs:
+
+| Job | O que faz |
+|---|---|
+| `test` | `pytest` com cobertura (limite 100% reportado) + suíte `unittest` (compatibilidade) |
+| `test:docker` | Build + `up` do compose, verifica `healthy`, envia update simulado via `getUpdates`, remove o ambiente |
+| `docs` | Valida `docker compose config`, compila os módulos Python e `bash -n` do script de smoke |
+
+**Executar localmente (igual ao que o CI faz):**
+
+```bash
+# 1. Testes + cobertura
+python3 -m venv .venv && source .venv/bin/activate
+pip install pytest coverage
+coverage run -m pytest tests/ -v --tb=short
+coverage report --show-missing --fail-under=100
+
+# 2. Smoke test (requer Docker e token do BotFather no .env)
+./scripts/ci_smoke.sh
+```
+
+O smoke test sobe o compose, aguarda os contêineres `healthy` e envia um
+`update` simulado para o bot (o `getUpdates` não exige token). Com um
+token inválido só o envio de mensagem retorna `401` — é o comportamento
+documentado, a stack e o loop de `getUpdates` estão verificados.
+
+### 📤 Push para o repositório (Fase 5)
+1. `git add -A && git commit -m "Fase 4: suíte de contrato, fluxo de áudio,
+   CI com cobertura + pytest, smoke test"`
+2. `git push origin main`
+3. Verificar-se o status dos jobs do GitHub Actions (todos `green` antes do
+   deploy final).
+

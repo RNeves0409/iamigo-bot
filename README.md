@@ -81,10 +81,17 @@ export $(cat .env | xargs)
 ### Executando
 
 ```bash
-python main.py
+# Com o Docker instalado e .env configurado:
+docker compose up -d
 ```
 
 O bot estará disponível na conversa privada com você no Telegram.
+
+### (Antigo deploy com systemd)
+
+O deploy em produção via systemd e `python main.py` foi mantido como referência
+do projeto. O novo fluxo preferido é o Docker Compose (acima) — veja
+`DEPLOY.md` em "Deploy com Docker".
 
 ---
 
@@ -98,10 +105,40 @@ python -m unittest tests.test_service -v
 
 ---
 
+## 🐳 Rodando com Docker (Fase 1)
+
+O projeto é entregue em containers. Requisitos: Docker + Docker Compose instalados.
+
+```bash
+# 1. Copie o modelo de variáveis de ambiente
+cp .env.example .env
+# Edite .env com seu TELEGRAM_BOT_TOKEN e TELEGRAM_USER_ID
+
+# 2. Leve os modelos do Ollama (pode demorar um pouco)
+docker pull ollama/ollama:latest
+docker compose pull
+
+# 3. Suba a stack
+docker compose up -d
+
+# 4. Verifique
+docker compose ps
+docker compose logs -f bot
+```
+
+Internamente:
+- `bot`  → `main.py` (API Telegram + agenda SQLite no volume `iamigo-data`)
+- `ollama` → Ollama, acesso interno em `http://ollama:11434`
+- Banco no padrão `/var/lib/iamigo/agenda.db` (volume)
+
+> A camada de IA (interpretador de linguagem natural e áudio) entra na
+> **Fase 2**; os comandos `/novo`, `/confirmar`, `/agenda`, `/cancelar`
+> continuam disponíveis inclusive sem a IA ativa.
+
 ## 📤 Publicando no GitHub
 
-1. Crie um repositório no GitHub (sem adicionar README, licença ou workflows —
-   este projeto já os traz);
+1. Crie o repositório no GitHub (com README, licença e workflows — o projeto
+   já traz tudo);
 2. No repositório local, conecte ao GitHub:
 
 ```bash
@@ -110,7 +147,8 @@ git branch -M main
 git push -u origin main
 ```
 
-O fluxo `CI` (GitHub Actions) roda todos os testes a cada `push` ou `pull_request`.
+O fluxo `CI` (GitHub Actions) roda todos os testes em cada `push` ou
+`pull_request`.
 
 ---
 

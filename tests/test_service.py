@@ -99,7 +99,7 @@ class TestHandleCommand(unittest.TestCase):
 
     def test_command_novo(self):
         """Teste do comando /novo."""
-        message = MockMessage("/novo Consulta | 05/11/2026 14:00 | 60")
+        message = MockMessage("/novo Consulta | 12/11/2026 14:00 | 60")
         handler.handle(message)
         self.mock_send.assert_called_once()
 
@@ -163,7 +163,7 @@ class TestIntegration(unittest.TestCase):
     def test_novo_and_confirmar(self):
         """Teste de fluxo completo: novo -> confirmar."""
         # Simular o comando /novo
-        message = MockMessage("/novo Teste | 05/11/2026 14:00 | 60")
+        message = MockMessage("/novo Teste | 12/11/2026 14:00 | 60")
         handler.handle(message)
         self.mock_send.assert_called_once()
 
@@ -184,7 +184,7 @@ class TestIntegration(unittest.TestCase):
     def test_confirmar_salva_agenda(self):
         """Teste: confirmar salva o compromisso na agenda."""
         # Criar rascunho via /novo
-        message = MockMessage("/novo Consulta | 05/11/2026 14:00 | 60")
+        message = MockMessage("/novo Consulta | 12/11/2026 14:00 | 60")
         handler.handle(message)
 
         # Confirmar
@@ -205,7 +205,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_abandonar_descarta_rascunho(self):
         """Teste: abandonar descarta o rascunho."""
-        message = MockMessage("/novo Teste | 05/11/2026 14:00 | 60")
+        message = MockMessage("/novo Teste | 12/11/2026 14:00 | 60")
         handler.handle(message)
         self.mock_send.assert_called()
 
@@ -235,7 +235,7 @@ class TestIntegration(unittest.TestCase):
     def test_cancelar(self):
         """Teste: cancelar um compromisso."""
         # Criar um compromisso
-        message = MockMessage("/novo Teste | 05/11/2026 14:00 | 60")
+        message = MockMessage("/novo Teste | 12/11/2026 14:00 | 60")
         handler.handle(message)
         self.mock_send.assert_called_once()
 
@@ -261,7 +261,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_invalid_input(self):
         """Teste: entrada inválida no /novo."""
-        message = MockMessage("/novo | 05/11/2026 14:00 | 60")
+        message = MockMessage("/novo | 12/11/2026 14:00 | 60")
         handler.handle(message)
         self.mock_send.assert_called_once()
 

@@ -1,0 +1,68 @@
+# docker-compose.yml — iAmigo (execução Docker)
+#
+# Serviços:
+#   bot      — o iAmigo (API Telegram + agenda SQLite em volume)
+#   ollama   — Ollama (IA local). Acesso interno na rede compose:
+#              OLLAMA_BASE_URL=http://ollama:11434
+#
+# Observações:
+#   - Não expõe 11434 do Ollama; só o CLI do host precisaria
+#     (--add-host=host.docker.internal:host-gateway, Linux).
+#   - O Ollama é checado antes do boot do bot (depends_on service_healthy).
+#   - Depois que o Docker e a IA estiverem prontos, e o usuário cuidar do
+#     Zabbix, o serviço zabbix-agent é adicionado (fase seguinte).
+
+services:
+  bot:
+    build: .
+    image: iamigo:bot
+    container_name: iamigo-bot
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    # Banco SQLite (volume iamigo-data) no caminho padrão do app
+    volumes:
+      - iamigo-data:/var/lib/iamigo
+
+    networks:
+      - iamigo-net
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: iamigo-ollama
+    restart: unless-stopped
+
+    # Modelos persistidos fora do container
+    volumes:
+      - ollama-data:/root/.ollama
+
+    networks:
+      - iamigo-net
+
+    deploy:
+      resources:
+        limits:
+          memory: "2800000000"
+
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -sf http://localhost:11434/api/tags >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+      start_period: 300s
+
+networks:
+  iamigo-net:
+    driver: bridge
+
+volumes:
+  iamigo-data:
+  ollama-data:

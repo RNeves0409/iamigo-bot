@@ -1,0 +1,21 @@
+# Ambiente virtual
+venv/
+.venv/
+
+# Compilados
+__pycache__/
+*.py[cod]
+
+# Segredos e config local
+.env
+.env.local
+
+# Logs
+logs/
+
+# Sistema
+journalctl-output.txt
+
+# Docker
+docker-compose.override.yml
+*.img
